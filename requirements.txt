@@ -1,0 +1,9 @@
+streamlit
+pandas
+numpy
+matplotlib
+plotly>=5.20
+tensorflow
+joblib
+scikit-learn
+Pillow
