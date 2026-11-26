@@ -1555,15 +1555,14 @@ def show_rul_prediction(df: pd.DataFrame) -> None:
                     "as a model input."
                 )
             cycles_used = float(input_row["cycle"].iloc[0])
-            projected_life = cycles_used + prediction
-            rul_axis_min = min(0.0, cycles_used, projected_life)
-            rul_axis_max = max(1.0, cycles_used, projected_life) * 1.1
+            rul_axis_min = min(0.0, cycles_used, prediction)
+            rul_axis_max = max(1.0, cycles_used, prediction) * 1.1
             rul_figure = go.Figure(
                 data=[
                     go.Bar(
                         name="Cycles used",
                         x=[cycles_used],
-                        y=["Engine lifecycle"],
+                        y=["Cycles used"],
                         orientation="h",
                         marker={"color": "#00BFFF"},
                         hovertemplate=(
@@ -1573,8 +1572,7 @@ def show_rul_prediction(df: pd.DataFrame) -> None:
                     go.Bar(
                         name="Sensor-based estimated RUL",
                         x=[prediction],
-                        y=["Engine lifecycle"],
-                        base=[cycles_used],
+                        y=["Estimated remaining life"],
                         orientation="h",
                         marker={"color": "#53C99A"},
                         hovertemplate=(
@@ -1635,7 +1633,8 @@ def show_rul_prediction(df: pd.DataFrame) -> None:
                 },
             )
             st.caption(
-                "The remaining-life estimate is based on the input cycle and sensor readings."
+                "Each bar starts at zero. The remaining-life estimate is based on "
+                "the input cycle and sensor readings."
             )
             st.plotly_chart(
                 rul_figure,
