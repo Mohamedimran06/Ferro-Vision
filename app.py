@@ -928,7 +928,10 @@ def make_rul_prediction(
     if not np.isfinite(values).all():
         raise ValueError("All model feature values must be finite numbers.")
     scaled_features = scaler.transform(numeric_features)
-    return float(model.predict(scaled_features, verbose=0).reshape(-1)[0])
+    prediction = float(model.predict(scaled_features, verbose=0).reshape(-1)[0])
+    if not np.isfinite(prediction):
+        raise ValueError("The model returned an invalid RUL estimate.")
+    return prediction
 
 
 def show_overview(df: pd.DataFrame) -> None:
@@ -1545,12 +1548,105 @@ def show_rul_prediction(df: pd.DataFrame) -> None:
             st.error(str(error))
         else:
             st.metric("Predicted remaining useful life", f"{prediction:.1f} cycles")
-            if example_context is not None:
+            if example_context is not None and actual_rul is not None:
                 st.caption(
                     f"Dataset example: {example_context}. The recorded RUL is "
                     f"{actual_rul:.0f} cycles; it is shown as a reference, not used "
                     "as a model input."
                 )
+            cycles_used = float(input_row["cycle"].iloc[0])
+            projected_life = cycles_used + prediction
+            rul_axis_min = min(0.0, cycles_used, projected_life)
+            rul_axis_max = max(1.0, cycles_used, projected_life) * 1.1
+            rul_figure = go.Figure(
+                data=[
+                    go.Bar(
+                        name="Cycles used",
+                        x=[cycles_used],
+                        y=["Engine lifecycle"],
+                        orientation="h",
+                        marker={"color": "#00BFFF"},
+                        hovertemplate=(
+                            "<b>Cycles used</b><br>%{x:.0f} cycles<extra></extra>"
+                        ),
+                    ),
+                    go.Bar(
+                        name="Sensor-based estimated RUL",
+                        x=[prediction],
+                        y=["Engine lifecycle"],
+                        base=[cycles_used],
+                        orientation="h",
+                        marker={"color": "#53C99A"},
+                        hovertemplate=(
+                            "<b>Estimated remaining life</b><br>"
+                            "%{x:.1f} cycles<extra></extra>"
+                        ),
+                    ),
+                ]
+            )
+            rul_figure.update_layout(
+                title={
+                    "text": "Cycle Usage and Estimated Remaining Life",
+                    "x": 0.02,
+                    "xanchor": "left",
+                    "font": {
+                        "size": 17,
+                        "color": "#F1F7FF",
+                        "family": "Segoe UI, Inter, sans-serif",
+                    },
+                },
+                autosize=True,
+                height=190,
+                margin={"l": 120, "r": 30, "t": 62, "b": 48},
+                paper_bgcolor="#0A0F1F",
+                plot_bgcolor="#0A0F1F",
+                font={"color": "#C6D5E6", "size": 11},
+                barmode="overlay",
+                bargap=0.5,
+                legend={
+                    "orientation": "h",
+                    "x": 0.02,
+                    "y": 1.12,
+                    "font": {"color": "#AFC3DA", "size": 10},
+                },
+                xaxis={
+                    "title": {
+                        "text": "Engine cycles",
+                        "font": {"color": "#AFC3DA", "size": 11},
+                    },
+                    "range": [rul_axis_min, rul_axis_max],
+                    "showgrid": True,
+                    "gridcolor": "rgba(136,164,196,0.12)",
+                    "zeroline": True,
+                    "zerolinecolor": "rgba(136,164,196,0.35)",
+                    "tickfont": {"color": "#839AB5", "size": 10},
+                    "automargin": True,
+                },
+                yaxis={
+                    "showgrid": False,
+                    "zeroline": False,
+                    "tickfont": {"color": "#C6D5E6", "size": 11},
+                    "automargin": True,
+                },
+                hoverlabel={
+                    "bgcolor": "#14233A",
+                    "bordercolor": "#00BFFF",
+                    "font": {"color": "#F1F7FF", "size": 12},
+                },
+            )
+            st.caption(
+                "The remaining-life estimate is based on the input cycle and sensor readings."
+            )
+            st.plotly_chart(
+                rul_figure,
+                width="stretch",
+                config={
+                    "responsive": True,
+                    "displayModeBar": False,
+                    "displaylogo": False,
+                },
+                key="rul_lifecycle_chart",
+            )
 
 
 def show_image_classification() -> None:

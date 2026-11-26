@@ -3,7 +3,7 @@
 The app has three pages selected with horizontal navigation buttons at the top:
 
 - **Overview** — view a casting inspection dashboard with dataset counts, class distribution, representative validation images, the image-classification workflow, an AI casting inspection flow card, an engine-cycle versus RUL chart, and an interactive turbofan sensor trend.
-- **RUL Prediction** — estimate remaining useful life with the trained ANN, using a dataset example, a one-row telemetry CSV, or manual entry of all 25 model features.
+- **RUL Prediction** — estimate remaining useful life with the trained ANN, using a dataset example, a one-row telemetry CSV, or manual entry of all 25 model features; view a post-prediction timeline of cycles used and sensor-based estimated cycles remaining.
 - **Image Classification** — verify that an upload resembles the held-out casting validation images, then classify accepted images as Normal or Defective.
 
 The Image Classification page has a staged image-selection/upload card, a responsive preview and inspection-controls layout, and status cards that show the predicted class and classifier confidence. The Ferro Vision brand header stays sticky while scrolling.
